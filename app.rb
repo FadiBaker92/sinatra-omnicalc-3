@@ -13,7 +13,7 @@ get("/umbrella") do
   erb(:umbrella_form)
 end
 
-get("/process_umbrella") do
+post("/process_umbrella") do
   @user_location = params.fetch("user_loc")
   user_location_gsub = @user_location.gsub(" ", "+")
   gmaps_url = "https://maps.googleapis.com/maps/api/geocode/json?address=#{user_location_gsub}&key=#{ENV["GMAPS_KEY"]}"
@@ -22,7 +22,7 @@ get("/process_umbrella") do
   @result_location = @parsed_result.dig("results", 0, "geometry", "location")
   @latitude = @result_location.fetch("lat")
   @longitude = @result_location.fetch("lng")
-  
+    
 
   erb(:umbrella_results)
 end
