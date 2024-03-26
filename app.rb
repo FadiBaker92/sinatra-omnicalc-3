@@ -37,8 +37,18 @@ post("/process_umbrella") do
       @any_precipitation = true 
     end
   end
-
-
-
   erb(:umbrella_results)
+end
+
+get("/message") do
+  erb(:message_form)
+end
+
+post("/process_single_message") do 
+  @your_message = params.fetch("user_message")
+
+
+
+  
+  erb(:message_result)
 end
