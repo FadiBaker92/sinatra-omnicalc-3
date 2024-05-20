@@ -60,6 +60,9 @@ post("/process_single_message") do
     }
   )
   @api_message = raw_response.fetch("choices").at(0).fetch("message").fetch("content")
-  erb(:message_result)
-  
+  erb(:message_result) 
+end
+
+get("/chat") do
+  erb(:chat_form)
 end
