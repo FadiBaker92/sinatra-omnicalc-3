@@ -1,6 +1,7 @@
 require "sinatra"
 require "sinatra/reloader"
 require "http"
+require "openai"
 
 get("/") do
   erb(:homepage)
@@ -45,10 +46,20 @@ get("/message") do
 end
 
 post("/process_single_message") do 
+  #AI_API_KEY
   @your_message = params.fetch("user_message")
-
-
-
-  
+  client = OpenAI::Client.new(access_token: ENV.fetch("AI_API_KEY"))
+  message_list = [
+  {:role => "system", :content => "You are a helpful assistant who talks like Shakespeare."},
+  {:role => "user", :content => "#{@your_message}"}
+]
+  raw_response = client.chat(
+    parameters: {
+      model: "gpt-3.5-turbo",
+      messages: message_list
+    }
+  )
+  @api_message = raw_response.fetch("choices").at(0).fetch("message").fetch("content")
   erb(:message_result)
+  
 end
