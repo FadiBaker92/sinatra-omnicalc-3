@@ -2,6 +2,8 @@ require "sinatra"
 require "sinatra/reloader"
 require "http"
 require "openai"
+require "sinatra/cookies"
+require "json"
 
 get("/") do
   erb(:homepage)
@@ -65,4 +67,39 @@ end
 
 get("/chat") do
   erb(:chat_form)
+end
+
+post("/chat") do
+  @your_message = params.fetch("user_message")
+  client = OpenAI::Client.new(access_token: ENV.fetch("AI_API_KEY"))
+  message_list = [
+  {:role => "system", :content => "You are a helpful assistant who talks like Shakespeare."},
+  {:role => "user", :content => "#{@your_message}"}
+]
+  raw_response = client.chat(
+    parameters: {
+      model: "gpt-3.5-turbo",
+      messages: message_list
+    }
+  )
+  next_message = raw_response.fetch("choices").at(0).fetch("message")
+  @api_response = raw_response.fetch("choices").at(0).fetch("message").fetch("content")
+  cookies["user"] = @your_message
+  cookies["assistant"] = @api_response
+  message_list.push(next_message)
+  message_list.push(
+    {:role => "user", :content => "#{@your_message}"}
+  )
+  raw_response = client.chat(
+    parameters: {
+      model: "gpt-3.5-turbo",
+      messages: message_list
+    }
+  )
+  next_message = raw_response.fetch("choices").at(0).fetch("message")
+  message_list.push(next_message)
+  @api_response = raw_response.fetch("choices").at(0).fetch("message").fetch("content")
+
+
+  erb(:chat_result)
 end
