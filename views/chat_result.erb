@@ -1,13 +1,22 @@
-<% message_list = JSON.parse(cookies[:conversation]) %>
-  <% message_list.each do |message| %>
-    <p><%= message["role"] %>:<%= message["content"] %></p>
+<dl>
+  <%@message_list.each do |message|%>
+    <dt><%= message["role"] %></dt>
+    <dd><%= message["content"] %></dd>
   <%end%>
-
-<p>User:<%= @user_message %></p>
-<p>Assistant: <%= @assistant_message %></p>
+</dl>
+<dl>
+<dt>user</dt>
+<dd><%= @user_message %></dd>
+<dt>assistant</dt>
+<dd><%= @assistant_message %></dd>
+</dl>
 
 <form action="/chat" method="post">
+  <label for="new_message_field">You:</label>
   <input type="text" name="user_message" placeholder="Type your message here">
   <input type="submit" value="Send">
 </form>
 <hr>
+<form action="/chat" method="get">
+  <button>Clear chat history</button>
+</form>
