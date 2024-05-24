@@ -69,35 +69,40 @@ get("/chat") do
   erb(:chat_form)
 end
 
-post("/chat") do
-  @user_message = params.fetch("user_message")
-  client = OpenAI::Client.new(access_token: ENV.fetch("AI_API_KEY"))
-  message_list = [
-  {:role => "system", :content => "You are a helpful assistant who talks like Shakespeare."},
-  {:role => "user", :content => "#{@user_message}"}
-  ]
 
-  raw_response = client.chat(
-    parameters: {
-      model: "gpt-3.5-turbo",
-      messages: message_list
-    }
-  )
-  next_message = raw_response.fetch("choices").at(0).fetch("message")
-  cookies["message"] = raw_response
-  @assistant_message = raw_response.fetch("choices").at(0).fetch("message").fetch("content")
-  message_list.push(next_message)
-  message_list.push(
-    :role => "user", :content => "#{@user_message}"
-  )
-  raw_response = client.chat(
-    parameters: {
-      model: "gpt-3.5-turbo",
-      messages: message_list
-    }
-  )  
-  next_message = raw_response.fetch("choices").at(0).fetch("message")
-  message_list.push(next_message)
+  post("/chat") do
+    @user_message = params.fetch("user_message")
+    client = OpenAI::Client.new(access_token: ENV.fetch("AI_API_KEY"))
   
-  erb(:chat_result)
-end
+    # Retrieve existing conversation from cookies
+    if cookies[:conversation]
+      message_list = JSON.parse(cookies[:conversation])
+    else
+      message_list = [
+        { role: "system", content: "You are a helpful assistant who talks like Shakespeare." }
+      ]
+    end
+  
+    # Append the user's message to the conversation
+    message_list << { role: "user", content: @user_message }
+  
+    # Get the assistant's response
+    raw_response = client.chat(
+      parameters: {
+        model: "gpt-3.5-turbo",
+        messages: message_list
+      }
+    )
+    assistant_message = raw_response.fetch("choices").at(0).fetch("message").fetch("content")
+    
+    # Append the assistant's response to the conversation
+    message_list << { role: "assistant", content: assistant_message }
+  
+    # Store the updated conversation in cookies
+    cookies[:conversation] = JSON.generate(message_list)
+  
+    # Pass the user and assistant messages to the view
+    @user_message = @user_message
+    @assistant_message = assistant_message
+    erb(:chat_result)
+  end
